@@ -30,7 +30,6 @@ QUICKSWAP_ABI = '[{"inputs":[{"internalType":"address","name":"_factory","type":
 WMATIC = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270' #Matic address.
 
 ##################
-
 w3 = Web3(HTTPProvider(RPC_URL))
 print("Web3 Connected: " + str(w3.isConnected()))
 
@@ -38,13 +37,14 @@ ORACLE_CONTRACT = w3.eth.contract(address=ORACLE, abi=ORACLE_ABI)  # Get Base to
 PEGSWAP_CONTRACT = w3.eth.contract(address=PEGSWAP, abi=PEGSWAP_ABI)  # Get Base token contract instance.
 QUICKSWAP_CONTRACT = w3.eth.contract(address=QUICKSWAP, abi=QUICKSWAP_ABI)  # Get Base token contract instance.
 
-def messageSend():
-    message = 'Matic balance refilled.'
+def messageSend(tx1,tx2,tx3):
+    message = 'Matic balance refilled.\n\nTx Withdraw: ' + str(tx1) + '\nTx Bridge: ' + str(tx2) + '\nTx Swap: ' + str(tx3)
     url = "https://api.telegram.org/bot" + str(key) + "/sendMessage?chat_id=" + str(messageid) + "&disable_web_page_preview=true&parse_mode=HTML&text=" + message
     if enabled == True:
         requests.post(url)  # TELEGRAM
 
 def withdrawLINK(AMOUNT):
+    global tx1
     # Gas settings
     gas = 250000
     gasPrice = w3.toWei('40', 'gwei')
@@ -77,11 +77,13 @@ def withdrawLINK(AMOUNT):
     print("Tx - Withdraw from oracle:")
     print(tx_token)
     checkConfirmation(tx_token)
+    tx1 = tx_token
 
 def bridgeLINK(AMOUNT):
+    global tx2, nonceCount
     # Gas settings
     gas = 250000
-    gasPrice = w3.toWei('40', 'gwei')
+    gasPrice = w3.toWei('100', 'gwei')
     print("Using max gas: " + str(gas))
     print("Using max gas price: " + str(gasPrice))
 
@@ -111,9 +113,11 @@ def bridgeLINK(AMOUNT):
     tx_token = w3.toHex(tx_token)
     print("Tx - Bridge LINK ERC721 to LINK ERC20:")
     print(tx_token)
-    checkConfirmation(tx_token)
+    #checkConfirmation(tx_token)
+    tx2 = tx_token
 
-def swapLINK(AMOUNT):
+def swapLINK(AMOUNT,nonceCount):
+    global tx3
     fromAmount = AMOUNT
     toAmount = 0
 
@@ -128,7 +132,7 @@ def swapLINK(AMOUNT):
     print("Using path: " + str(path))
 
     # Nonce
-    nonceCount = w3.eth.getTransactionCount(NODE_WALLET)
+    nonceCount = nonceCount + 1
     print("Using nonce: " + str(nonceCount))
 
     # Set TX parameters
@@ -156,6 +160,7 @@ def swapLINK(AMOUNT):
     print("Tx - Swap to MATIC:")
     print(tx_token)
     checkConfirmation(tx_token)
+    tx3 = tx_token
 
 def checkConfirmation(tx_token):
     confirmed = 0
@@ -175,14 +180,15 @@ if __name__ == '__main__':
         BALANCE = ORACLE_CONTRACT.functions.withdrawable().call({'from': WALLET})
         print('Current contract balance: ' + str(round(BALANCE / 10 ** 18,3)) + ' LINK')
         NODE_BALANCE = w3.eth.getBalance(NODE_WALLET)
-        print("Current node balance: " + str(round(NODE_BALANCE / 10 ** 18,3)) + " MATIC")
+        print("Current node balance: " + str(round(NODE_BALANCE / 10 ** 18,3)) + " MATIC    ")
         print("Current minimum balance: " + str(round(MINIMUM / 10 ** 18, 3)) + " MATIC")
 
         if NODE_BALANCE < MINIMUM:
             withdrawLINK(SWAPAMOUNT)
             bridgeLINK(SWAPAMOUNT)
-            swapLINK(SWAPAMOUNT)
-            messageSend()
+            swapLINK(SWAPAMOUNT,nonceCount)
+            messageSend(tx1,tx2,tx3)
+            time.sleep(15)
         else:
             print('Enough matic available.')
             time.sleep(15)
