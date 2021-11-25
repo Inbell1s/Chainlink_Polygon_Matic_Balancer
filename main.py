@@ -31,7 +31,6 @@ WMATIC = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270' #Matic address.
 
 ##################
 
-
 w3 = Web3(HTTPProvider(RPC_URL))
 print("Web3 Connected: " + str(w3.isConnected()))
 
@@ -77,19 +76,7 @@ def withdrawLINK(AMOUNT):
     tx_token = w3.toHex(tx_token)
     print("Tx - Withdraw from oracle:")
     print(tx_token)
-
-
-    confirmed = 0
-    while confirmed == 0:
-        statusTX = w3.eth.get_transaction(tx_token)
-        # print(statusTX)
-        if "None" in str(statusTX):
-            print("Tx Still confirming")
-            time.sleep(1)
-        else:
-            print("Tx confirmed")
-            confirmed = confirmed + 1
-            time.sleep(1)
+    checkConfirmation(tx_token)
 
 def bridgeLINK(AMOUNT):
     # Gas settings
@@ -124,18 +111,7 @@ def bridgeLINK(AMOUNT):
     tx_token = w3.toHex(tx_token)
     print("Tx - Bridge LINK ERC721 to LINK ERC20:")
     print(tx_token)
-
-    confirmed = 0
-    while confirmed == 0:
-        statusTX = w3.eth.get_transaction(tx_token)
-        # print(statusTX)
-        if "None" in str(statusTX):
-            print("Tx Still confirming")
-            time.sleep(1)
-        else:
-            print("Tx confirmed")
-            confirmed = confirmed + 1
-            time.sleep(1)
+    checkConfirmation(tx_token)
 
 def swapLINK(AMOUNT):
     fromAmount = AMOUNT
@@ -179,17 +155,19 @@ def swapLINK(AMOUNT):
     tx_token = w3.toHex(tx_token)
     print("Tx - Swap to MATIC:")
     print(tx_token)
+    checkConfirmation(tx_token)
+
+def checkConfirmation(tx_token):
     confirmed = 0
-    while confirmed == 0:
-        statusTX = w3.eth.get_transaction(tx_token)
-        # print(statusTX)
-        if "None" in str(statusTX):
-            print("Tx Still confirming")
-            time.sleep(1)
-        else:
-            print("Tx confirmed")
-            confirmed = confirmed + 1
-            time.sleep(1)
+    statusTX = w3.eth.get_transaction(tx_token)
+    # print(statusTX)
+    if "None" in str(statusTX):
+        print("Tx Still confirming")
+        time.sleep(1)
+    else:
+        print("Tx confirmed")
+        confirmed = confirmed + 1
+        time.sleep(1)
 
 if __name__ == '__main__':
     while True:
