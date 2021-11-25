@@ -5,8 +5,7 @@ Checks the node MATIC balance and refills it.
 2. Withdraws LINK from contract.
 3. Swaps ERC721 LINK for ERC20 LINK on pegswap.
 4. Swaps LINK for MATIC on quickswap.
-(OPTIONAL)
-5. Sends Telegram message with TX id's.
+5. Sends Telegram message with TX id's. (OPTIONAL)
 
 Before you start:
 1. Edit configuration variables in main.py
